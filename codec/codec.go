@@ -4,16 +4,12 @@
 
 package codec
 
-import (
-	"encoding/json"
-)
-
 // DefaultCodec is the default codec used by arpc
 var DefaultCodec Codec = &JSONCodec{}
 
 // Codec is the interface that wraps the arpc Message data encoding method.
 //
-// Marshal returns the JSON encoding of v
+// # Marshal returns the JSON encoding of v
 //
 // Unmarshal parses the Message data and stores the result
 // in the value pointed to by v
@@ -27,15 +23,17 @@ type JSONCodec struct{}
 
 // Marshal wraps std json.Marshal
 func (j *JSONCodec) Marshal(v interface{}) ([]byte, error) {
-	return json.Marshal(v)
+	_ = "STUB: not implemented"
+	return nil,
+
+		// Unmarshal wraps std json.Unmarshal
+		nil
 }
 
-// Unmarshal wraps std json.Unmarshal
 func (j *JSONCodec) Unmarshal(data []byte, v interface{}) error {
-	return json.Unmarshal(data, v)
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // SetCodec sets default codec instance
-func SetCodec(c Codec) {
-	DefaultCodec = c
-}
+func SetCodec(c Codec) { _ = "STUB: not implemented"; return }

@@ -5,101 +5,29 @@
 package util
 
 import (
-	"errors"
-	"runtime"
-	"unsafe"
-
 	acodec "github.com/lesismal/arpc/codec"
-	"github.com/lesismal/arpc/log"
 )
 
 // Empty struct
 type Empty struct{}
 
 // Recover handles panic and logs stack info
-func Recover() {
-	if err := recover(); err != nil {
-		const size = 64 << 10
-		buf := make([]byte, size)
-		buf = buf[:runtime.Stack(buf, false)]
-		log.Error("runtime error: %v\ntraceback:\n%v\n", err, *(*string)(unsafe.Pointer(&buf)))
-	}
-}
+func Recover() { _ = "STUB: not implemented"; return }
 
 // Safe wraps a function-calling with panic recovery
-func Safe(call func()) {
-	defer Recover()
-	call()
-}
+func Safe(call func()) { _ = "STUB: not implemented"; return }
 
 // StrToBytes hacks string to []byte
-func StrToBytes(s string) []byte {
-	x := (*[2]uintptr)(unsafe.Pointer(&s))
-	h := [3]uintptr{x[0], x[1], x[1]}
-	return *(*[]byte)(unsafe.Pointer(&h))
-}
+func StrToBytes(s string) []byte { _ = "STUB: not implemented"; return nil }
 
 // BytesToStr hacks []byte to string
-func BytesToStr(b []byte) string {
-	return *(*string)(unsafe.Pointer(&b))
-}
+func BytesToStr(b []byte) string { _ = "STUB: not implemented"; return "" }
 
 // ValueToBytes converts values to []byte
-func ValueToBytes(codec acodec.Codec, v interface{}) []byte {
-	if v == nil {
-		return nil
-	}
-	var (
-		err  error
-		data []byte
-	)
-	switch vt := v.(type) {
-	case []byte:
-		data = vt
-	case *[]byte:
-		data = *vt
-	case string:
-		data = StrToBytes(vt)
-	case *string:
-		data = StrToBytes(*vt)
-	case error:
-		data = StrToBytes(vt.Error())
-	case *error:
-		data = StrToBytes((*vt).Error())
-	default:
-		if codec == nil {
-			codec = acodec.DefaultCodec
-		}
-		data, err = codec.Marshal(vt)
-		if err != nil {
-			log.Error("ValueToBytes: %v", err)
-		}
-	}
-
-	return data
-}
+func ValueToBytes(codec acodec.Codec, v interface{}) []byte { _ = "STUB: not implemented"; return nil }
 
 // BytesToValue converts []byte to values
 func BytesToValue(codec acodec.Codec, data []byte, v interface{}) error {
-	var err error
-	if v != nil {
-		switch vt := v.(type) {
-		case *[]byte:
-			*vt = make([]byte, len(data))
-			copy(*vt, data)
-		case *string:
-			*vt = string(data)
-		case *error:
-			*vt = errors.New(string(data))
-		default:
-			if codec == nil {
-				codec = acodec.DefaultCodec
-			}
-			err = codec.Unmarshal(data, vt)
-			if err != nil {
-				log.Error("ValueToBytes: %v", err)
-			}
-		}
-	}
-	return err
+	_ = "STUB: not implemented"
+	return nil
 }

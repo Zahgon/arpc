@@ -8,11 +8,8 @@ import (
 	"context"
 	"net"
 	"sync"
-	"sync/atomic"
-	"time"
 
 	"github.com/lesismal/arpc/codec"
-	"github.com/lesismal/arpc/log"
 	"github.com/lesismal/arpc/util"
 )
 
@@ -38,190 +35,53 @@ type Server struct {
 }
 
 // Serve starts service with listener.
-func (s *Server) Serve(ln net.Listener) error {
-	s.Listener = ln
-	s.chStop = make(chan error)
-	log.Info("%v Running On: \"%v\"", s.Handler.LogTag(), ln.Addr())
-	defer log.Info("%v Stopped", s.Handler.LogTag())
-	return s.runLoop()
-}
+func (s *Server) Serve(ln net.Listener) error { _ = "STUB: not implemented"; return nil }
 
 // Run starts tcp service on addr.
-func (s *Server) Run(addr string) error {
-	ln, err := net.Listen("tcp", addr)
-	if err != nil {
-		log.Info("%v Running failed: %v", s.Handler.LogTag(), err)
-		return err
-	}
-	s.Listener = ln
-	s.chStop = make(chan error)
-	log.Info("%v Running On: \"%v\"", s.Handler.LogTag(), ln.Addr())
-	// defer log.Info("%v Stopped", s.Handler.LogTag())
-	return s.runLoop()
-}
+func (s *Server) Run(addr string) error { _ = "STUB: not implemented"; return nil }
+
+// defer log.Info("%v Stopped", s.Handler.LogTag())
 
 func (s *Server) Broadcast(method string, v interface{}, args ...interface{}) {
-	msg := s.NewMessage(CmdNotify, method, v, args...)
-	s.mux.Lock()
-	defer func() {
-		msg.Release()
-		s.mux.Unlock()
-	}()
-
-	for c := range s.clients {
-		msg.Retain()
-		c.PushMsg(msg, TimeZero)
-	}
+	_ = "STUB: not implemented"
+	return
 }
 
 func (s *Server) BroadcastWithFilter(method string, v interface{}, filter func(*Client) bool, args ...interface{}) {
-	msg := s.NewMessage(CmdNotify, method, v, args...)
-	s.mux.Lock()
-	defer func() {
-		msg.Release()
-		s.mux.Unlock()
-	}()
-
-	for c := range s.clients {
-		if filter == nil || filter(c) {
-			msg.Retain()
-			c.PushMsg(msg, TimeZero)
-		}
-	}
+	_ = "STUB: not implemented"
+	return
 }
 
-func (s *Server) ForEach(h func(*Client)) {
-	s.mux.Lock()
-	defer s.mux.Unlock()
-	for c := range s.clients {
-		h(c)
-	}
-}
+func (s *Server) ForEach(h func(*Client)) { _ = "STUB: not implemented"; return }
 
 func (s *Server) ForEachWithFilter(h func(*Client), filter func(*Client) bool) {
-	s.mux.Lock()
-	defer s.mux.Unlock()
-	for c := range s.clients {
-		if filter == nil || filter(c) {
-			h(c)
-		}
-	}
+	_ = "STUB: not implemented"
+	return
 }
 
 // Stop stops service.
-func (s *Server) Stop() error {
-	defer log.Info("%v \"%v\" Stop", s.Handler.LogTag(), s.Listener.Addr())
-	s.running = false
-	s.Listener.Close()
-	select {
-	case <-s.chStop:
-	case <-time.After(time.Second):
-		return ErrTimeout
-	default:
-	}
-	return nil
-}
+func (s *Server) Stop() error { _ = "STUB: not implemented"; return nil }
 
 // Shutdown shutdown service.
-func (s *Server) Shutdown(ctx context.Context) error {
-	defer log.Info("%v \"%v\" Shutdown", s.Handler.LogTag(), s.Listener.Addr())
-	s.running = false
-	s.Listener.Close()
-	select {
-	case <-s.chStop:
-	case <-ctx.Done():
-		return ErrTimeout
-	}
-	return nil
-}
+func (s *Server) Shutdown(ctx context.Context) error { _ = "STUB: not implemented"; return nil }
 
 // NewMessage creates a Message.
 func (s *Server) NewMessage(cmd byte, method string, v interface{}, args ...interface{}) *Message {
-	if len(args) == 0 {
-		return newMessage(cmd, method, v, false, false, atomic.AddUint64(&s.seq, 1), s.Handler, s.Codec, nil)
-	}
-	return newMessage(cmd, method, v, false, false, atomic.AddUint64(&s.seq, 1), s.Handler, s.Codec, args[0].(map[interface{}]interface{}))
+	_ = "STUB: not implemented"
+	return nil
 }
 
-func (s *Server) addLoad() int64 {
-	return atomic.AddInt64(&s.CurrLoad, 1)
-}
+func (s *Server) addLoad() int64 { _ = "STUB: not implemented"; return 0 }
 
-func (s *Server) subLoad() int64 {
-	return atomic.AddInt64(&s.CurrLoad, -1)
-}
+func (s *Server) subLoad() int64 { _ = "STUB: not implemented"; return 0 }
 
-func (s *Server) addClient(c *Client) {
-	s.mux.Lock()
-	s.clients[c] = util.Empty{}
-	s.mux.Unlock()
-}
+func (s *Server) addClient(c *Client) { _ = "STUB: not implemented"; return }
 
-func (s *Server) deleteClient(c *Client) {
-	s.mux.Lock()
-	delete(s.clients, c)
-	s.mux.Unlock()
-}
+func (s *Server) deleteClient(c *Client) { _ = "STUB: not implemented"; return }
 
-func (s *Server) clearClients() {
-	s.mux.Lock()
-	for c := range s.clients {
-		go c.Stop()
-	}
-	s.clients = map[*Client]util.Empty{}
-	s.mux.Unlock()
-}
+func (s *Server) clearClients() { _ = "STUB: not implemented"; return }
 
-func (s *Server) runLoop() error {
-	var (
-		err  error
-		cli  *Client
-		conn net.Conn
-	)
-
-	s.running = true
-	defer func() {
-		s.clearClients()
-		close(s.chStop)
-	}()
-
-	for s.running {
-		conn, err = s.Listener.Accept()
-		if err == nil {
-			load := s.addLoad()
-			if s.MaxLoad <= 0 || load <= s.MaxLoad {
-				s.Accepted++
-				cli = newClientWithConn(conn, s.Codec, s.Handler, func(c *Client) {
-					s.deleteClient(c)
-					s.subLoad()
-				})
-				s.addClient(cli)
-				s.Handler.OnConnected(cli)
-			} else {
-				conn.Close()
-				s.subLoad()
-			}
-		} else if s.running {
-			if ne, ok := err.(net.Error); ok && ne.Temporary() {
-				log.Error("%v Accept error: %v; retrying...", s.Handler.LogTag(), err)
-				time.Sleep(time.Second / 20)
-			} else {
-				log.Error("%v Accept error: %v", s.Handler.LogTag(), err)
-				break
-			}
-		}
-	}
-
-	return err
-}
+func (s *Server) runLoop() error { _ = "STUB: not implemented"; return nil }
 
 // NewServer creates an arpc Server.
-func NewServer() *Server {
-	h := DefaultHandler.Clone()
-	h.SetLogTag("[ARPC SVR]")
-	return &Server{
-		Codec:   codec.DefaultCodec,
-		Handler: h,
-		clients: map[*Client]util.Empty{},
-	}
-}
+func NewServer() *Server { _ = "STUB: not implemented"; return nil }

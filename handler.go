@@ -5,17 +5,13 @@
 package arpc
 
 import (
-	"bufio"
 	"context"
-	"fmt"
 	"io"
 	"net"
 	"sync"
 	"time"
 
 	"github.com/lesismal/arpc/codec"
-	"github.com/lesismal/arpc/log"
-	"github.com/lesismal/arpc/util"
 )
 
 // DefaultHandler is the default Handler used by arpc
@@ -45,16 +41,11 @@ var (
 )
 
 func getAsyncHandler(t *time.Timer, h AsyncHandlerFunc) *asyncHandler {
-	ah := asyncHandlerPool.Get().(*asyncHandler)
-	ah.timer = t
-	ah.handler = h
-	return ah
+	_ = "STUB: not implemented"
+	return nil
 }
 
-func putAsyncHandler(ah *asyncHandler) {
-	*ah = emptyAsyncHandler
-	asyncHandlerPool.Put(ah)
-}
+func putAsyncHandler(ah *asyncHandler) { _ = "STUB: not implemented"; return }
 
 // routerHandler saves all middleware and method/router handler funcs
 // for every method by register order,
@@ -299,841 +290,339 @@ type handler struct {
 	executor func(f func())
 }
 
-func (h *handler) Clone() Handler {
-	cp := *h
-	cp.middles = make([]HandlerFunc, len(h.middles))
-	copy(cp.middles, h.middles)
+func (h *handler) Clone() Handler { _ = "STUB: not implemented"; return *new(Handler) }
 
-	cp.msgCoders = make([]MessageCoder, len(h.msgCoders))
-	copy(cp.msgCoders, h.msgCoders)
+func (h *handler) LogTag() string { _ = "STUB: not implemented"; return "" }
 
-	cp.routes = map[string]*routerHandler{}
-	for k, v := range h.routes {
-		rh := &routerHandler{
-			async:    v.async,
-			handlers: make([]HandlerFunc, len(v.handlers)),
-		}
-		copy(rh.handlers, v.handlers)
-		cp.routes[k] = rh
-	}
+func (h *handler) SetLogTag(tag string) { _ = "STUB: not implemented"; return }
 
-	cp.streams = map[string]*streamHandler{}
-	for k, v := range h.streams {
-		sh := &streamHandler{
-			async:   v.async,
-			handler: v.handler,
-		}
-		cp.streams[k] = sh
-	}
+func (h *handler) HandleConnected(onConnected func(*Client)) { _ = "STUB: not implemented"; return }
 
-	ctx, cancel := context.WithCancel(context.Background())
-	cp.ctx = ctx
-	cp.cancel = cancel
-
-	return &cp
-}
-
-func (h *handler) LogTag() string {
-	return h.logtag
-}
-
-func (h *handler) SetLogTag(tag string) {
-	h.logtag = tag
-}
-
-func (h *handler) HandleConnected(onConnected func(*Client)) {
-	h.onConnected = onConnected
-}
-
-func (h *handler) OnConnected(c *Client) {
-	if h.onConnected != nil {
-		h.onConnected(c)
-	}
-}
+func (h *handler) OnConnected(c *Client) { _ = "STUB: not implemented"; return }
 
 func (h *handler) HandleDisconnected(onDisConnected func(*Client)) {
-	h.onDisConnected = onDisConnected
+	_ = "STUB: not implemented"
+	return
 }
 
-func (h *handler) OnDisconnected(c *Client) {
-	if h.onDisConnected != nil {
-		h.onDisConnected(c)
-	}
-}
+func (h *handler) OnDisconnected(c *Client) { _ = "STUB: not implemented"; return }
 
-func (h *handler) MaxReconnectTimes() int {
-	return h.maxReconnectTimes
-}
+func (h *handler) MaxReconnectTimes() int { _ = "STUB: not implemented"; return 0 }
 
-func (h *handler) SetMaxReconnectTimes(n int) {
-	h.maxReconnectTimes = n
-}
+func (h *handler) SetMaxReconnectTimes(n int) { _ = "STUB: not implemented"; return }
 
 func (h *handler) HandleOverstock(onOverstock func(c *Client, m *Message)) {
-	h.onOverstock = func(c *Client, m *Message) {
-		if onOverstock != nil {
-			onOverstock(c, m)
-		}
-		h.OnMessageDone(c, m)
-	}
+	_ = "STUB: not implemented"
+	return
 }
 
-func (h *handler) OnOverstock(c *Client, m *Message) {
-	if h.onOverstock != nil {
-		h.onOverstock(c, m)
-	}
-}
+func (h *handler) OnOverstock(c *Client, m *Message) { _ = "STUB: not implemented"; return }
 
 func (h *handler) HandleMessageDropped(onMessageDropped func(c *Client, m *Message)) {
-	h.onMessageDropped = func(c *Client, m *Message) {
-		if onMessageDropped != nil {
-			onMessageDropped(c, m)
-		}
-		h.OnMessageDone(c, m)
-	}
+	_ = "STUB: not implemented"
+	return
 }
 
-func (h *handler) OnMessageDropped(c *Client, m *Message) {
-	if h.onMessageDropped != nil {
-		h.onMessageDropped(c, m)
-	}
-}
+func (h *handler) OnMessageDropped(c *Client, m *Message) { _ = "STUB: not implemented"; return }
 
 func (h *handler) HandleMessageDone(onMessageDone func(c *Client, m *Message)) {
-	h.onMessageDone = onMessageDone
+	_ = "STUB: not implemented"
+	return
 }
 
-func (h *handler) OnMessageDone(c *Client, m *Message) {
-	if h.onMessageDone != nil && m != nil {
-		h.onMessageDone(c, m)
-	}
-}
+func (h *handler) OnMessageDone(c *Client, m *Message) { _ = "STUB: not implemented"; return }
 
 func (h *handler) HandleSessionMiss(onSessionMiss func(c *Client, m *Message)) {
-	h.onSessionMiss = onSessionMiss
+	_ = "STUB: not implemented"
+	return
 }
 
-func (h *handler) OnSessionMiss(c *Client, m *Message) {
-	if h.onSessionMiss != nil {
-		h.onSessionMiss(c, m)
-		h.OnMessageDone(c, m)
-	}
-}
+func (h *handler) OnSessionMiss(c *Client, m *Message) { _ = "STUB: not implemented"; return }
 
 func (h *handler) HandleContextDone(onContextDone func(ctx *Context)) {
-	h.onContextDone = onContextDone
+	_ = "STUB: not implemented"
+	return
 }
 
-func (h *handler) OnContextDone(ctx *Context) {
-	if h.onContextDone != nil {
-		h.onContextDone(ctx)
-	}
-}
+func (h *handler) OnContextDone(ctx *Context) { _ = "STUB: not implemented"; return }
 
-func (h *handler) BeforeRecv(hb func(net.Conn) error) {
-	h.beforeRecv = hb
-}
+func (h *handler) BeforeRecv(hb func(net.Conn) error) { _ = "STUB: not implemented"; return }
 
-func (h *handler) BeforeSend(hs func(net.Conn) error) {
-	h.beforeSend = hs
-}
+func (h *handler) BeforeSend(hs func(net.Conn) error) { _ = "STUB: not implemented"; return }
 
-func (h *handler) BatchRecv() bool {
-	return h.batchRecv
-}
+func (h *handler) BatchRecv() bool { _ = "STUB: not implemented"; return false }
 
-func (h *handler) SetBatchRecv(batch bool) {
-	h.batchRecv = batch
-}
+func (h *handler) SetBatchRecv(batch bool) { _ = "STUB: not implemented"; return }
 
-func (h *handler) BatchSend() bool {
-	return h.batchSend
-}
+func (h *handler) BatchSend() bool { _ = "STUB: not implemented"; return false }
 
-func (h *handler) SetBatchSend(batch bool) {
-	h.batchSend = batch
-}
+func (h *handler) SetBatchSend(batch bool) { _ = "STUB: not implemented"; return }
 
-func (h *handler) AsyncWrite() bool {
-	return h.asyncWrite
-}
+func (h *handler) AsyncWrite() bool { _ = "STUB: not implemented"; return false }
 
-func (h *handler) SetAsyncWrite(async bool) {
-	h.asyncWrite = async
-}
+func (h *handler) SetAsyncWrite(async bool) { _ = "STUB: not implemented"; return }
 
-func (h *handler) AsyncResponse() bool {
-	return h.asyncResponse
-}
+func (h *handler) AsyncResponse() bool { _ = "STUB: not implemented"; return false }
 
-func (h *handler) SetAsyncResponse(async bool) {
-	h.asyncResponse = async
-}
+func (h *handler) SetAsyncResponse(async bool) { _ = "STUB: not implemented"; return }
 
 func (h *handler) WrapReader(conn net.Conn) io.Reader {
-	if h.wrapReader != nil {
-		return h.wrapReader(conn)
-	}
-	return conn
+	_ = "STUB: not implemented"
+	return *new(io.Reader)
 }
 
 func (h *handler) SetReaderWrapper(wrapper func(conn net.Conn) io.Reader) {
-	h.wrapReader = wrapper
+	_ = "STUB: not implemented"
+	return
 }
 
-func (h *handler) RecvBufferSize() int {
-	return h.recvBufferSize
-}
+func (h *handler) RecvBufferSize() int { _ = "STUB: not implemented"; return 0 }
 
-func (h *handler) SetRecvBufferSize(size int) {
-	h.recvBufferSize = size
-}
+func (h *handler) SetRecvBufferSize(size int) { _ = "STUB: not implemented"; return }
 
-func (h *handler) SendBufferSize() int {
-	return h.sendBufferSize
-}
+func (h *handler) SendBufferSize() int { _ = "STUB: not implemented"; return 0 }
 
-func (h *handler) SetSendBufferSize(size int) {
-	h.sendBufferSize = size
-}
+func (h *handler) SetSendBufferSize(size int) { _ = "STUB: not implemented"; return }
 
 func (h *handler) ReadTimeout() time.Duration {
-	return h.readTimeout
+	_ = "STUB: not implemented"
+	return *new(time.Duration)
 }
 
-func (h *handler) SetReadTimeout(timeout time.Duration) {
-	h.readTimeout = timeout
-}
+func (h *handler) SetReadTimeout(timeout time.Duration) { _ = "STUB: not implemented"; return }
 
 func (h *handler) WriteTimeout() time.Duration {
-	return h.writeTimeout
+	_ = "STUB: not implemented"
+	return *new(time.Duration)
 }
 
-func (h *handler) SetWriteTimeout(timeout time.Duration) {
-	h.writeTimeout = timeout
-}
+func (h *handler) SetWriteTimeout(timeout time.Duration) { _ = "STUB: not implemented"; return }
 
-func (h *handler) SendQueueSize() int {
-	return h.sendQueueSize
-}
+func (h *handler) SendQueueSize() int { _ = "STUB: not implemented"; return 0 }
 
-func (h *handler) SetSendQueueSize(size int) {
-	h.sendQueueSize = size
-}
+func (h *handler) SetSendQueueSize(size int) { _ = "STUB: not implemented"; return }
 
-func (h *handler) StreamQueueSize() int {
-	return h.streamQueueSize
-}
+func (h *handler) StreamQueueSize() int { _ = "STUB: not implemented"; return 0 }
 
-func (h *handler) SetStreamQueueSize(size int) {
-	h.streamQueueSize = size
-}
+func (h *handler) SetStreamQueueSize(size int) { _ = "STUB: not implemented"; return }
 
-func (h *handler) MaxBodyLen() int {
-	return h.maxBodyLen
-}
+func (h *handler) MaxBodyLen() int { _ = "STUB: not implemented"; return 0 }
 
-func (h *handler) SetMaxBodyLen(l int) {
-	h.maxBodyLen = l
-}
+func (h *handler) SetMaxBodyLen(l int) { _ = "STUB: not implemented"; return }
 
-func (h *handler) Use(cb HandlerFunc) {
-	if cb == nil {
-		return
-	}
-	cbWithNext := func(ctx *Context) {
-		cb(ctx)
-		ctx.Next()
-	}
-	h.middles = append(h.middles, cbWithNext)
-	for k, v := range h.routes {
-		rh := &routerHandler{
-			async:    v.async,
-			handlers: make([]HandlerFunc, len(v.handlers)+1),
-		}
-		copy(rh.handlers, v.handlers)
-		rh.handlers[len(v.handlers)] = cbWithNext
-		h.routes[k] = rh
-	}
-}
+func (h *handler) Use(cb HandlerFunc) { _ = "STUB: not implemented"; return }
 
-func (h *handler) UseCoder(coder MessageCoder) {
-	if coder != nil {
-		h.msgCoders = append(h.msgCoders, coder)
-	}
-}
+func (h *handler) UseCoder(coder MessageCoder) { _ = "STUB: not implemented"; return }
 
-func (h *handler) Coders() []MessageCoder {
-	return h.msgCoders
-}
+func (h *handler) Coders() []MessageCoder { _ = "STUB: not implemented"; return nil }
 
 func (h *handler) Handle(method string, cb HandlerFunc, args ...interface{}) {
-	if method == "" {
-		panic(fmt.Errorf("empty('') method is reserved for [method not found], should use HandleNotFound to register '' handler"))
-	}
-	h.handle(method, cb, args...)
+	_ = "STUB: not implemented"
+	return
 }
 
-func (h *handler) HandleNotFound(cb HandlerFunc) {
-	h.handle("", cb)
-}
+func (h *handler) HandleNotFound(cb HandlerFunc) { _ = "STUB: not implemented"; return }
 
 func (h *handler) handle(method string, cb HandlerFunc, args ...interface{}) {
-	if h.routes == nil {
-		h.routes = map[string]*routerHandler{}
-	}
-	if len(method) > MaxMethodLen {
-		panic(fmt.Errorf("invalid method length %v(> MaxMethodLen %v)", len(method), MaxMethodLen))
-	}
-
-	if _, ok := h.routes[""]; !ok {
-		rh := &routerHandler{
-			async:    false,
-			handlers: make([]HandlerFunc, len(h.middles)+1),
-		}
-		copy(rh.handlers, h.middles)
-		rh.handlers[len(h.middles)] = func(ctx *Context) {
-			ctx.Error(ErrMethodNotFound)
-			ctx.Next()
-		}
-		h.routes[""] = rh
-	}
-
-	if _, ok := h.routes[method]; ok && method != "" {
-		panic(fmt.Errorf("handler exist for method %v ", method))
-	}
-
-	async := h.AsyncResponse()
-	if len(args) > 0 {
-		if bv, ok := args[0].(bool); ok {
-			async = bv
-		}
-	}
-	rh := &routerHandler{
-		async:    async,
-		handlers: make([]HandlerFunc, len(h.middles)+1),
-	}
-	copy(rh.handlers, h.middles)
-	rh.handlers[len(h.middles)] = func(ctx *Context) {
-		cb(ctx)
-		ctx.Next()
-	}
-	h.routes[method] = rh
+	_ = "STUB: not implemented"
+	return
 }
 
 func (h *handler) HandleStream(method string, cb StreamHandlerFunc, args ...interface{}) {
-	if h.streams == nil {
-		h.streams = map[string]*streamHandler{}
-	}
-	if len(method) > MaxMethodLen {
-		panic(fmt.Errorf("invalid method length %v(> MaxMethodLen %v)", len(method), MaxMethodLen))
-	}
-
-	if _, ok := h.streams[method]; ok && method != "" {
-		panic(fmt.Errorf("stream handler exist for method %v ", method))
-	}
-
-	async := h.AsyncResponse()
-	if len(args) > 0 {
-		if bv, ok := args[0].(bool); ok {
-			async = bv
-		}
-	}
-	rh := &streamHandler{
-		async:   async,
-		handler: cb,
-	}
-	h.streams[method] = rh
+	_ = "STUB: not implemented"
+	return
 }
 
-func (h *handler) Recv(c *Client) (*Message, error) {
-	var (
-		err     error
-		message *Message
-	)
-
-	if h.beforeRecv != nil {
-		if err = h.beforeRecv(c.Conn); err != nil {
-			return nil, err
-		}
-	}
-	if h.readTimeout > 0 {
-		c.Conn.SetReadDeadline(time.Now().Add(h.readTimeout))
-	}
-
-	_, err = io.ReadFull(c.Reader, c.Head[:])
-	if err != nil {
-		return nil, err
-	}
-
-	message, err = c.Head.message(h)
-	if err != nil {
-		return nil, err
-	}
-
-	if message.Len() >= HeadLen {
-		_, err = io.ReadFull(c.Reader, message.Buffer[HeaderIndexBodyLenEnd:])
-	}
-
-	return message, err
-}
+func (h *handler) Recv(c *Client) (*Message, error) { _ = "STUB: not implemented"; return nil, nil }
 
 func (h *handler) Send(conn net.Conn, buffer []byte) (int, error) {
-	if h.beforeSend != nil {
-		if err := h.beforeSend(conn); err != nil {
-			return -1, err
-		}
-	}
-	if h.writeTimeout > 0 {
-		conn.SetWriteDeadline(time.Now().Add(h.writeTimeout))
-	}
-
-	n, err := conn.Write(buffer)
-	return n, err
+	_ = "STUB: not implemented"
+	return 0, nil
 }
 
 func (h *handler) SendN(conn net.Conn, buffers net.Buffers) (int, error) {
-	if h.beforeSend != nil {
-		if err := h.beforeSend(conn); err != nil {
-			return -1, err
-		}
-	}
-	if h.writeTimeout > 0 {
-		conn.SetWriteDeadline(time.Now().Add(h.writeTimeout))
-	}
-
-	n64, err := buffers.WriteTo(conn)
-	return int(n64), err
+	_ = "STUB: not implemented"
+	return 0, nil
 }
 
-func (h *handler) OnMessage(c *Client, msg *Message) {
-	defer util.Recover()
+func (h *handler) OnMessage(c *Client, msg *Message) { _ = "STUB: not implemented"; return }
 
-	switch msg.Cmd() {
-	case CmdPing:
-		c.Pong()
-		return
-	case CmdPong:
-		return
-	}
+func (h *handler) Malloc(size int) []byte { _ = "STUB: not implemented"; return nil }
 
-	for i := len(h.msgCoders) - 1; i >= 0; i-- {
-		msg = h.msgCoders[i].Decode(c, msg)
-	}
+func (h *handler) HandleMalloc(f func(int) []byte) { _ = "STUB: not implemented"; return }
 
-	ml := msg.MethodLen()
-	if ml <= 0 || ml > MaxMethodLen || ml > (msg.Len()-HeadLen) {
-		log.Warn("%v OnMessage: invalid request method length %v, dropped", h.LogTag(), ml)
-		return
-	}
-
-	cmd := msg.Cmd()
-	switch cmd {
-	case CmdRequest, CmdNotify:
-		method := msg.method()
-		if rh, ok := h.routes[method]; ok {
-			ctx := newContext(c, msg, rh.handlers)
-			if !rh.async {
-				ctx.Next()
-				h.OnContextDone(ctx)
-			} else {
-				h.AsyncExecute(func() {
-					ctx.Next()
-					h.OnContextDone(ctx)
-				})
-			}
-		} else {
-			if rh, ok = h.routes[""]; ok {
-				ctx := newContext(c, msg, rh.handlers)
-				ctx.Next()
-				h.OnContextDone(ctx)
-			}
-
-			if cmd == CmdRequest {
-				log.Warn("%v OnMessage: invalid Call with method: [%v], no handler", h.LogTag(), method)
-			} else {
-				log.Warn("%v OnMessage: invalid Notify with method: [%v], no handler", h.LogTag(), method)
-			}
-		}
-	case CmdResponse:
-		if !msg.IsAsync() {
-			seq := msg.Seq()
-			session, ok := c.getSession(seq)
-			if ok {
-				session.done <- msg
-			} else {
-				h.OnSessionMiss(c, msg)
-				log.Warn("%v OnMessage: session not exist or expired", h.LogTag())
-			}
-		} else {
-			ah, ok := c.getAndDeleteAsyncHandler(msg.Seq())
-			if ok {
-				if ah.timer != nil {
-					ah.timer.Stop()
-				}
-				ctx := newContext(c, msg, nil)
-				ah.handler(ctx, msg.Error())
-				putAsyncHandler(ah)
-				h.OnContextDone(ctx)
-			} else {
-				h.OnSessionMiss(c, msg)
-				log.Warn("%v OnMessage: async handler not exist or expired", h.LogTag())
-			}
-		}
-	case CmdStream:
-		id := msg.Seq()
-		local := !msg.IsStreamLocal()
-		eof := msg.IsStreamEOF()
-		method := msg.method()
-		stream, ok := c.getStreamAndPushMsg(id, local, eof)
-		if !ok {
-			sh, ok := h.streams[method]
-			if ok && !local {
-				stream = c.newStream(msg.method(), id, false)
-				stream.onMessage(msg)
-				if eof {
-					stream.CloseRecv()
-				}
-				if !sh.async {
-					sh.handler(stream)
-				} else {
-					h.AsyncExecute(func() { sh.handler(stream) })
-				}
-			} else {
-				h.onMessageDone(c, msg)
-				log.Warn("%v OnMessage: invalid Stream with method: [%v], no handler", h.LogTag(), method)
-			}
-		} else {
-			stream.onMessage(msg)
-			if eof {
-				stream.CloseRecv()
-			}
-		}
-	default:
-		log.Warn("%v OnMessage: invalid cmd [%v]", h.LogTag(), msg.Cmd())
-		go c.Stop()
-	}
-}
-
-func (h *handler) Malloc(size int) []byte {
-	if h.malloc != nil {
-		return h.malloc(size)
-	}
-	return make([]byte, size)
-}
-
-func (h *handler) HandleMalloc(f func(int) []byte) {
-	h.malloc = f
-}
-
-func (h *handler) Append(b []byte, more ...byte) []byte {
-	if h.append != nil {
-		return h.append(b, more...)
-	}
-	return append(b, more...)
-}
+func (h *handler) Append(b []byte, more ...byte) []byte { _ = "STUB: not implemented"; return nil }
 
 func (h *handler) HandleAppend(f func(b []byte, more ...byte) []byte) {
-	h.append = f
+	_ = "STUB: not implemented"
+	return
 }
 
-func (h *handler) Free(b []byte) {
-	if h.free != nil {
-		h.free(b)
-	}
-}
+func (h *handler) Free(b []byte) { _ = "STUB: not implemented"; return }
 
-func (h *handler) HandleFree(f func([]byte)) {
-	h.free = f
-}
+func (h *handler) HandleFree(f func([]byte)) { _ = "STUB: not implemented"; return }
 
-func (h *handler) EnablePool(enable bool) {
-	if enable {
-		h.HandleMalloc(DefaultAllocator.Malloc)
-		h.HandleAppend(DefaultAllocator.Append)
-		h.HandleFree(DefaultAllocator.Free)
-		h.HandleContextDone(func(ctx *Context) {
-			ctx.Release()
-		})
-		h.HandleMessageDone(func(c *Client, m *Message) {
-			m.Release()
-		})
-	} else {
-		h.HandleMalloc(func(size int) []byte {
-			return make([]byte, size)
-		})
-		h.HandleAppend(func(b []byte, more ...byte) []byte {
-			return append(b, more...)
-		})
-		h.HandleFree(func(buf []byte) {})
-		h.HandleContextDone(func(ctx *Context) {})
-		h.HandleMessageDone(func(c *Client, m *Message) {})
-	}
-}
+func (h *handler) EnablePool(enable bool) { _ = "STUB: not implemented"; return }
 
 func (h *handler) Context() (context.Context, context.CancelFunc) {
-	return h.ctx, h.cancel
+	_ = "STUB: not implemented"
+	return *new(context.Context), *new(context.CancelFunc)
 }
 
 func (h *handler) SetContext(ctx context.Context, cancel context.CancelFunc) {
-	h.ctx = ctx
-	h.cancel = cancel
+	_ = "STUB: not implemented"
+	return
 }
 
-func (h *handler) Cancel() {
-	if h.cancel != nil {
-		h.cancel()
-	}
-}
+func (h *handler) Cancel() { _ = "STUB: not implemented"; return }
 
 func (h *handler) NewMessage(cmd byte, method string, v interface{}, isError bool, isAsync bool, seq uint64, codec codec.Codec, values map[interface{}]interface{}) *Message {
-	return newMessage(cmd, method, v, false, false, seq, h, codec, values)
+	_ = "STUB: not implemented"
+	return nil
 }
 
 func (h *handler) NewMessageWithBuffer(buffer []byte) *Message {
-	msg := messagePool.Get().(*Message)
-	msg.Buffer = buffer
-	msg.handler = h
-	return msg
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // SetAsyncExecutor sets executor for message.
-func (h *handler) SetAsyncExecutor(executor func(f func())) {
-	h.executor = executor
-}
+func (h *handler) SetAsyncExecutor(executor func(f func())) { _ = "STUB: not implemented"; return }
 
 // AsyncExecute executes a func.
-func (h *handler) AsyncExecute(f func()) {
-	if h.executor != nil {
-		h.executor(f)
-	} else {
-		go util.Safe(f)
-	}
-}
+func (h *handler) AsyncExecute(f func()) { _ = "STUB: not implemented"; return }
 
 // NewHandler returns a default Handler implementation.
-func NewHandler() Handler {
-	h := &handler{
-		logtag:          "[ARPC CLI]",
-		batchRecv:       true,
-		batchSend:       true,
-		asyncWrite:      true,
-		asyncResponse:   true,
-		recvBufferSize:  8192,
-		sendQueueSize:   4096,
-		streamQueueSize: 4,
-		maxBodyLen:      DefaultMaxBodyLen,
-	}
-	h.wrapReader = func(conn net.Conn) io.Reader {
-		return bufio.NewReaderSize(conn, h.recvBufferSize)
-	}
-	h.HandleConnected(func(cli *Client) {
-		if tcpConn, ok := cli.Conn.(*net.TCPConn); ok {
-			tcpConn.SetNoDelay(false)
-		}
-	})
-	ctx, cancel := context.WithCancel(context.Background())
-	h.ctx = ctx
-	h.cancel = cancel
-	return h
-}
+func NewHandler() Handler { _ = "STUB: not implemented"; return *new(Handler) }
 
 // SetHandler sets default Handler.
 func SetHandler(h Handler) {
-	DefaultHandler = h
+	_ = "STUB: not implemented"
+
+	// SetLogTag sets DefaultHandler's log tag.
+	return
 }
 
-// SetLogTag sets DefaultHandler's log tag.
-func SetLogTag(tag string) {
-	DefaultHandler.SetLogTag(tag)
-}
+func SetLogTag(tag string) { _ = "STUB: not implemented"; return }
 
 // HandleConnected registers default handler which will be called when client connected.
-func HandleConnected(onConnected func(*Client)) {
-	DefaultHandler.HandleConnected(onConnected)
-}
+func HandleConnected(onConnected func(*Client)) { _ = "STUB: not implemented"; return }
 
 // HandleDisconnected registers default handler which will be called when client disconnected.
-func HandleDisconnected(onDisConnected func(*Client)) {
-	DefaultHandler.HandleDisconnected(onDisConnected)
-}
+func HandleDisconnected(onDisConnected func(*Client)) { _ = "STUB: not implemented"; return }
 
 // HandleOverstock registers default handler which will be called when client send queue is overstock.
-func HandleOverstock(onOverstock func(c *Client, m *Message)) {
-	DefaultHandler.HandleOverstock(onOverstock)
-}
+func HandleOverstock(onOverstock func(c *Client, m *Message)) { _ = "STUB: not implemented"; return }
 
 // HandleMessageDropped registers default handler which will be called when message dropped.
 func HandleMessageDropped(onOverstock func(c *Client, m *Message)) {
-	DefaultHandler.HandleMessageDropped(onOverstock)
+	_ = "STUB: not implemented"
+	return
 }
 
 // HandleSessionMiss registers default handler which will be called when async message seq not found.
 func HandleSessionMiss(onSessionMiss func(c *Client, m *Message)) {
-	DefaultHandler.HandleSessionMiss(onSessionMiss)
+	_ = "STUB: not implemented"
+	return
 }
 
 // BeforeRecv registers default handler which will be called before Recv.
-func BeforeRecv(h func(net.Conn) error) {
-	DefaultHandler.BeforeRecv(h)
-}
+func BeforeRecv(h func(net.Conn) error) { _ = "STUB: not implemented"; return }
 
 // BeforeSend registers default handler which will be called before Send.
-func BeforeSend(h func(net.Conn) error) {
-	DefaultHandler.BeforeSend(h)
-}
+func BeforeSend(h func(net.Conn) error) { _ = "STUB: not implemented"; return }
 
 // BatchRecv returns default BatchRecv flag.
-func BatchRecv() bool {
-	return DefaultHandler.BatchRecv()
-}
+func BatchRecv() bool { _ = "STUB: not implemented"; return false }
 
 // SetBatchRecv sets default BatchRecv flag.
-func SetBatchRecv(batch bool) {
-	DefaultHandler.SetBatchRecv(batch)
-}
+func SetBatchRecv(batch bool) { _ = "STUB: not implemented"; return }
 
 // BatchSend returns default BatchSend flag.
-func BatchSend() bool {
-	return DefaultHandler.BatchSend()
-}
+func BatchSend() bool { _ = "STUB: not implemented"; return false }
 
 // SetBatchSend sets default BatchSend flag.
-func SetBatchSend(batch bool) {
-	DefaultHandler.SetBatchSend(batch)
-}
+func SetBatchSend(batch bool) { _ = "STUB: not implemented"; return }
 
 // AsyncResponse returns default AsyncResponse flag.
-func AsyncResponse() bool {
-	return DefaultHandler.AsyncResponse()
-}
+func AsyncResponse() bool { _ = "STUB: not implemented"; return false }
 
 // SetAsyncResponse sets default AsyncResponse flag.
-func SetAsyncResponse(async bool) {
-	DefaultHandler.SetAsyncResponse(async)
-}
+func SetAsyncResponse(async bool) { _ = "STUB: not implemented"; return }
 
 // SetReaderWrapper registers default reader wrapper for net.Conn.
-func SetReaderWrapper(wrapper func(conn net.Conn) io.Reader) {
-	DefaultHandler.SetReaderWrapper(wrapper)
-}
+func SetReaderWrapper(wrapper func(conn net.Conn) io.Reader) { _ = "STUB: not implemented"; return }
 
 // RecvBufferSize returns default client's read buffer size.
-func RecvBufferSize() int {
-	return DefaultHandler.RecvBufferSize()
-}
+func RecvBufferSize() int { _ = "STUB: not implemented"; return 0 }
 
 // SetRecvBufferSize sets default client's read buffer size.
-func SetRecvBufferSize(size int) {
-	DefaultHandler.SetRecvBufferSize(size)
-}
+func SetRecvBufferSize(size int) { _ = "STUB: not implemented"; return }
 
 // SendBufferSize returns default client's read buffer size.
-func SendBufferSize() int {
-	return DefaultHandler.SendBufferSize()
-}
+func SendBufferSize() int { _ = "STUB: not implemented"; return 0 }
 
 // SetSendBufferSize sets default client's read buffer size.
-func SetSendBufferSize(size int) {
-	DefaultHandler.SetSendBufferSize(size)
-}
+func SetSendBufferSize(size int) { _ = "STUB: not implemented"; return }
 
 // ReadTimeout returns client's read timeout.
-func ReadTimeout() time.Duration {
-	return DefaultHandler.ReadTimeout()
-}
+func ReadTimeout() time.Duration { _ = "STUB: not implemented"; return *new(time.Duration) }
 
 // SetReadTimeout sets client's read timeout.
-func SetReadTimeout(timeout time.Duration) {
-	DefaultHandler.SetReadTimeout(timeout)
-}
+func SetReadTimeout(timeout time.Duration) { _ = "STUB: not implemented"; return }
 
 // WriteTimeout returns client's write timeout.
-func WriteTimeout() time.Duration {
-	return DefaultHandler.WriteTimeout()
-}
+func WriteTimeout() time.Duration { _ = "STUB: not implemented"; return *new(time.Duration) }
 
 // SetWriteTimeout sets client's write timeout.
-func SetWriteTimeout(timeout time.Duration) {
-	DefaultHandler.SetWriteTimeout(timeout)
-}
+func SetWriteTimeout(timeout time.Duration) { _ = "STUB: not implemented"; return }
 
 // SendQueueSize returns default client's send queue channel capacity.
-func SendQueueSize() int {
-	return DefaultHandler.SendQueueSize()
-}
+func SendQueueSize() int { _ = "STUB: not implemented"; return 0 }
 
 // SetSendQueueSize sets default client's send queue channel capacity.
-func SetSendQueueSize(size int) {
-	DefaultHandler.SetSendQueueSize(size)
-}
+func SetSendQueueSize(size int) { _ = "STUB: not implemented"; return }
 
 // StreamQueueSize returns default stream queue channel capacity.
-func StreamQueueSize() int {
-	return DefaultHandler.StreamQueueSize()
-}
+func StreamQueueSize() int { _ = "STUB: not implemented"; return 0 }
 
 // SetStreamQueueSize sets default stream queue channel capacity.
-func SetStreamQueueSize(size int) {
-	DefaultHandler.SetStreamQueueSize(size)
-}
+func SetStreamQueueSize(size int) { _ = "STUB: not implemented"; return }
 
-func MaxBodyLen() int {
-	return DefaultHandler.MaxBodyLen()
-}
+func MaxBodyLen() int { _ = "STUB: not implemented"; return 0 }
 
-func SetMaxBodyLen(l int) {
-	DefaultHandler.SetMaxBodyLen(l)
-}
+func SetMaxBodyLen(l int) { _ = "STUB: not implemented"; return }
 
 // Use registers default method/router handler middleware.
-func Use(h HandlerFunc) {
-	DefaultHandler.Use(h)
-}
+func Use(h HandlerFunc) { _ = "STUB: not implemented"; return }
 
 // UseCoder registers default message coding middleware,
 // coder.Encode will be called before message send,
 // coder.Decode will be called after message recv.
-func UseCoder(coder MessageCoder) {
-	DefaultHandler.UseCoder(coder)
-}
+func UseCoder(coder MessageCoder) { _ = "STUB: not implemented"; return }
 
 // Handle registers default method/router handler.
 //
 // If pass a Boolean value of "true", the handler will be called asynchronously in a new goroutine,
 // Else the handler will be called synchronously in the client's reading goroutine one by one.
-func Handle(m string, h HandlerFunc, args ...interface{}) {
-	DefaultHandler.Handle(m, h, args...)
-}
+func Handle(m string, h HandlerFunc, args ...interface{}) { _ = "STUB: not implemented"; return }
 
 // HandleNotFound registers default "" method/router handler,
 // It will be called when mothod/router is not found.
-func HandleNotFound(h HandlerFunc) {
-	DefaultHandler.HandleNotFound(h)
-}
+func HandleNotFound(h HandlerFunc) { _ = "STUB: not implemented"; return }
 
 // HandleMalloc registers default buffer maker.
-func HandleMalloc(f func(int) []byte) {
-	DefaultHandler.HandleMalloc(f)
-}
+func HandleMalloc(f func(int) []byte) { _ = "STUB: not implemented"; return }
 
 // HandleFree registers buffer releaser.
-func HandleFree(f func([]byte)) {
-	DefaultHandler.HandleFree(f)
-}
+func HandleFree(f func([]byte)) { _ = "STUB: not implemented"; return }
 
 // EnablePool registers handlers for pool operation for Context and Message and Message.Buffer
-func EnablePool(enable bool) {
-	DefaultHandler.EnablePool(enable)
-}
+func EnablePool(enable bool) { _ = "STUB: not implemented"; return }
 
 // SetAsyncExecutor sets executor.
 // AsyncExecute executes a func
-func SetAsyncExecutor(executor func(f func())) {
-	DefaultHandler.SetAsyncExecutor(executor)
-}
+func SetAsyncExecutor(executor func(f func())) { _ = "STUB: not implemented"; return }
 
 // AsyncExecute executes a func.
-func AsyncExecute(f func()) {
-	DefaultHandler.AsyncExecute(f)
-}
+func AsyncExecute(f func()) { _ = "STUB: not implemented"; return }

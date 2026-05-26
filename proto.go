@@ -5,14 +5,9 @@
 package arpc
 
 import (
-	"encoding/binary"
-	"errors"
-	"fmt"
 	"sync"
-	"sync/atomic"
 
 	"github.com/lesismal/arpc/codec"
-	"github.com/lesismal/arpc/util"
 )
 
 const (
@@ -91,25 +86,15 @@ var (
 type Header []byte
 
 // BodyLen returns Message body length.
-func (h Header) BodyLen() int {
-	return int(binary.LittleEndian.Uint32(h[HeaderIndexBodyLenBegin:HeaderIndexBodyLenEnd]))
-}
+func (h Header) BodyLen() int { _ = "STUB: not implemented"; return 0 }
 
 // message creates a Message by body length.
 func (h Header) message(handler Handler) (*Message, error) {
-	bodyLen := h.BodyLen()
-	if bodyLen < 0 || bodyLen > handler.MaxBodyLen() {
-		return nil, fmt.Errorf("invalid body length: %v", bodyLen)
-	}
-
-	// msg := &Message{Buffer: handler.Malloc(HeadLen + bodyLen)}
-	msg := messagePool.Get().(*Message)
-	msg.handler = handler
-	msg.Buffer = handler.Malloc(HeadLen + bodyLen)
-
-	binary.LittleEndian.PutUint32(msg.Buffer[HeaderIndexBodyLenBegin:HeaderIndexBodyLenEnd], uint32(bodyLen))
-	return msg, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
+
+// msg := &Message{Buffer: handler.Malloc(HeadLen + bodyLen)}
 
 var (
 	messagePool = sync.Pool{
@@ -133,48 +118,25 @@ type Message struct {
 }
 
 // Retain increment the reference count and returns the current value.
-func (m *Message) Retain() int32 {
-	return atomic.AddInt32(&m.ref, 1)
-}
+func (m *Message) Retain() int32 { _ = "STUB: not implemented"; return 0 }
 
 // Release decrement the reference count and returns the current value.
-func (m *Message) Release() int32 {
-	n := atomic.AddInt32(&m.ref, -1)
-	if n == -1 {
-		if m.handler != nil {
-			m.handler.Free(m.Buffer)
-		}
-		*m = emptyMessage
-		messagePool.Put(m)
-	}
-	return n
-}
+func (m *Message) Release() int32 { _ = "STUB: not implemented"; return 0 }
 
 // ResetAttrs resets reserved/cmd/flag/methodLen to 0.
-func (m *Message) ResetAttrs() {
-	binary.LittleEndian.PutUint32(m.Buffer[HeaderIndexBodyLenEnd:HeaderIndexSeqBegin], 0)
-}
+func (m *Message) ResetAttrs() { _ = "STUB: not implemented"; return }
 
 // Payback put Message to the pool.
-func (m *Message) Payback() {
-	*m = emptyMessage
-	messagePool.Put(m)
-}
+func (m *Message) Payback() { _ = "STUB: not implemented"; return }
 
 // Len returns total length of buffer.
-func (m *Message) Len() int {
-	return len(m.Buffer)
-}
+func (m *Message) Len() int { _ = "STUB: not implemented"; return 0 }
 
 // Cmd returns cmd.
-func (m *Message) Cmd() byte {
-	return m.Buffer[HeaderIndexCmd] & HeaderCmdBitMask
-}
+func (m *Message) Cmd() byte { _ = "STUB: not implemented"; return 0 }
 
 // SetCmd sets cmd.
-func (m *Message) SetCmd(cmd byte) {
-	m.Buffer[HeaderIndexCmd] = (m.Buffer[HeaderIndexCmd] & HeaderStreamFlagBitMask) | cmd
-}
+func (m *Message) SetCmd(cmd byte) { _ = "STUB: not implemented"; return }
 
 // // IsStream represents whether it's a stream message.
 // func (m *Message) IsStream() bool {
@@ -191,221 +153,106 @@ func (m *Message) SetCmd(cmd byte) {
 // }
 
 // IsStream represents whether it's a stream message.
-func (m *Message) IsStreamLocal() bool {
-	return m.Buffer[HeaderIndexCmd]&HeaderStreamLocalBit > 0
-}
+func (m *Message) IsStreamLocal() bool { _ = "STUB: not implemented"; return false }
 
 // SetStream sets the flag for a stream message.
-func (m *Message) SetStreamLocal(local bool) {
-	if local {
-		m.Buffer[HeaderIndexCmd] |= HeaderStreamLocalBit
-	} else {
-		m.Buffer[HeaderIndexCmd] &= (^HeaderStreamLocalBit)
-	}
-}
+func (m *Message) SetStreamLocal(local bool) { _ = "STUB: not implemented"; return }
 
 // IsStream represents whether it's a stream's last message and the stream is EOF and closed.
-func (m *Message) IsStreamEOF() bool {
-	return m.Buffer[HeaderIndexCmd]&HeaderStreamEOFBit > 0
-}
+func (m *Message) IsStreamEOF() bool { _ = "STUB: not implemented"; return false }
 
 // SetStream sets the flag for a stream's last message and mark the stream is EOF and closed.
-func (m *Message) SetStreamEOF(eof bool) {
-	if eof {
-		m.Buffer[HeaderIndexCmd] |= HeaderStreamEOFBit
-	} else {
-		m.Buffer[HeaderIndexCmd] &= (^HeaderStreamEOFBit)
-	}
-}
+func (m *Message) SetStreamEOF(eof bool) { _ = "STUB: not implemented"; return }
 
 // IsError returns error flag.
-func (m *Message) IsError() bool {
-	return m.Buffer[HeaderIndexFlag]&HeaderFlagMaskError > 0
-}
+func (m *Message) IsError() bool { _ = "STUB: not implemented"; return false }
 
 // SetError sets error flag.
-func (m *Message) SetError(isError bool) {
-	if isError {
-		m.Buffer[HeaderIndexFlag] |= HeaderFlagMaskError
-	} else {
-		m.Buffer[HeaderIndexFlag] &= ^HeaderFlagMaskError
-	}
-}
+func (m *Message) SetError(isError bool) { _ = "STUB: not implemented"; return }
 
 // Error returns error.
-func (m *Message) Error() error {
-	if !m.IsError() {
-		return nil
-	}
-	return errors.New(string(m.Buffer[HeadLen+m.MethodLen():]))
-}
+func (m *Message) Error() error { _ = "STUB: not implemented"; return nil }
 
 // IsAsync returns async flag.
-func (m *Message) IsAsync() bool {
-	return m.Buffer[HeaderIndexFlag]&HeaderFlagMaskAsync > 0
-}
+func (m *Message) IsAsync() bool { _ = "STUB: not implemented"; return false }
 
 // SetAsync sets async flag.
-func (m *Message) SetAsync(isAsync bool) {
-	if isAsync {
-		m.Buffer[HeaderIndexFlag] |= HeaderFlagMaskAsync
-	} else {
-		m.Buffer[HeaderIndexFlag] &= ^HeaderFlagMaskAsync
-	}
-}
+func (m *Message) SetAsync(isAsync bool) { _ = "STUB: not implemented"; return }
 
 // Values returns values.
 func (m *Message) Values() map[interface{}]interface{} {
-	return m.values
+	_ = "STUB: not implemented"
+
+	// SetFlagBit sets flag bit value by index.
+	return nil
 }
 
-// SetFlagBit sets flag bit value by index.
-func (m *Message) SetFlagBit(index int, value bool) error {
-	switch index {
-	case 0, 1, 2, 3, 4, 5, 6, 7:
-		if value {
-			m.Buffer[HeaderIndexReserved] |= (0x1 << index)
-		} else {
-			m.Buffer[HeaderIndexReserved] &= (^(0x1 << index))
-		}
-		return nil
-	// case 8, 9:
-	// 	if value {
-	// 		m.Buffer[HeaderIndexFlag] |= (0x1 << (index - 2))
-	// 	} else {
-	// 		m.Buffer[HeaderIndexFlag] &= (^(0x1 << (index - 2)))
-	// 	}
-	// 	return nil
-	default:
-		break
-	}
-	return ErrInvalidFlagBitIndex
-}
+func (m *Message) SetFlagBit(index int, value bool) error { _ = "STUB: not implemented"; return nil }
+
+// case 8, 9:
+// 	if value {
+// 		m.Buffer[HeaderIndexFlag] |= (0x1 << (index - 2))
+// 	} else {
+// 		m.Buffer[HeaderIndexFlag] &= (^(0x1 << (index - 2)))
+// 	}
+// 	return nil
 
 // IsFlagBitSet returns flag bit value.
-func (m *Message) IsFlagBitSet(index int) bool {
-	switch index {
-	case 0, 1, 2, 3, 4, 5, 6, 7:
-		return (m.Buffer[HeaderIndexReserved] & (0x1 << index)) != 0
-	// case 8, 9:
-	// 	return (m.Buffer[HeaderIndexFlag] & (0x1 << (index - 2))) != 0
-	default:
-		break
-	}
-	return false
-}
+func (m *Message) IsFlagBitSet(index int) bool { _ = "STUB: not implemented"; return false }
+
+// case 8, 9:
+// 	return (m.Buffer[HeaderIndexFlag] & (0x1 << (index - 2))) != 0
 
 // MethodLen returns method length.
-func (m *Message) MethodLen() int {
-	return int(m.Buffer[HeaderIndexMethodLen])
-}
+func (m *Message) MethodLen() int { _ = "STUB: not implemented"; return 0 }
 
 // SetMethodLen sets method length.
-func (m *Message) SetMethodLen(l int) {
-	m.Buffer[HeaderIndexMethodLen] = byte(l)
-}
+func (m *Message) SetMethodLen(l int) { _ = "STUB: not implemented"; return }
 
 // Method returns method.
-func (m *Message) Method() string {
-	return string(m.Buffer[HeadLen : HeadLen+m.MethodLen()])
-}
+func (m *Message) Method() string { _ = "STUB: not implemented"; return "" }
 
-func (m *Message) method() string {
-	return util.BytesToStr(m.Buffer[HeadLen : HeadLen+m.MethodLen()])
-}
+func (m *Message) method() string { _ = "STUB: not implemented"; return "" }
 
 // BodyLen returns body length.
-func (m *Message) BodyLen() int {
-	return int(binary.LittleEndian.Uint32(m.Buffer[HeaderIndexBodyLenBegin:HeaderIndexBodyLenEnd]))
-}
+func (m *Message) BodyLen() int { _ = "STUB: not implemented"; return 0 }
 
 // SetBodyLen sets body length.
-func (m *Message) SetBodyLen(l int) {
-	binary.LittleEndian.PutUint32(m.Buffer[HeaderIndexBodyLenBegin:HeaderIndexBodyLenEnd], uint32(l))
-}
+func (m *Message) SetBodyLen(l int) { _ = "STUB: not implemented"; return }
 
 // Seq returns sequence number.
-func (m *Message) Seq() uint64 {
-	return binary.LittleEndian.Uint64(m.Buffer[HeaderIndexSeqBegin:HeaderIndexSeqEnd])
-}
+func (m *Message) Seq() uint64 { _ = "STUB: not implemented"; return 0 }
 
 // SetSeq sets sequence number.
-func (m *Message) SetSeq(seq uint64) {
-	binary.LittleEndian.PutUint64(m.Buffer[HeaderIndexSeqBegin:HeaderIndexSeqEnd], seq)
-}
+func (m *Message) SetSeq(seq uint64) { _ = "STUB: not implemented"; return }
 
 // Data returns payload data after method.
-func (m *Message) Data() []byte {
-	length := HeadLen + m.MethodLen()
-	return m.Buffer[length:]
-}
+func (m *Message) Data() []byte { _ = "STUB: not implemented"; return nil }
 
 // Get returns value for key.
 func (m *Message) Get(key interface{}) (interface{}, bool) {
-	if len(m.values) == 0 {
-		return nil, false
-	}
-	value, ok := m.values[key]
-	return value, ok
+	_ = "STUB: not implemented"
+	return nil, false
 }
 
 // Set sets key-value pair.
-func (m *Message) Set(key interface{}, value interface{}) {
-	if key == nil || value == nil {
-		return
-	}
-	if m.values == nil {
-		m.values = map[interface{}]interface{}{}
-	}
-	m.values[key] = value
-}
+func (m *Message) Set(key interface{}, value interface{}) { _ = "STUB: not implemented"; return }
 
 // NewMessage creates a Message.
 func NewMessage(cmd byte, method string, v interface{}, isError bool, isAsync bool, seq uint64, h Handler, codec codec.Codec, values map[interface{}]interface{}) *Message {
-	return newMessage(cmd, method, v, false, false, seq, h, codec, values)
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // newMessage creates a Message.
 func newMessage(cmd byte, method string, v interface{}, isError bool, isAsync bool, seq uint64, h Handler, codec codec.Codec, values map[interface{}]interface{}) *Message {
-	var (
-		data    []byte
-		bodyLen int
-		msg     *Message
-	)
-
-	data = util.ValueToBytes(codec, v)
-	bodyLen = len(method) + len(data)
-
-	if h == nil {
-		h = DefaultHandler
-	}
-
-	// msg = &Message{Buffer: h.Malloc(HeadLen + bodyLen), values: values}
-	msg = messagePool.Get().(*Message)
-	msg.values = values
-	msg.handler = h
-	msg.Buffer = h.Malloc(HeadLen + bodyLen)
-
-	msg.ResetAttrs()
-	msg.SetCmd(cmd)
-	msg.SetError(isError)
-	msg.SetAsync(isAsync)
-	msg.SetMethodLen(len(method))
-	msg.SetBodyLen(bodyLen)
-	msg.SetSeq(seq)
-	copy(msg.Buffer[HeadLen:HeadLen+len(method)], method)
-	copy(msg.Buffer[HeadLen+len(method):], data)
-
-	return msg
-}
-
-func checkMethod(method string) error {
-	ml := len(method)
-	if ml == 0 || ml > MaxMethodLen {
-		return fmt.Errorf("invalid method length: %v, should <= %v", ml, MaxMethodLen)
-	}
+	_ = "STUB: not implemented"
 	return nil
 }
+
+// msg = &Message{Buffer: h.Malloc(HeadLen + bodyLen), values: values}
+
+func checkMethod(method string) error { _ = "STUB: not implemented"; return nil }
 
 // MessageCoder defines Message coding middleware interface.
 type MessageCoder interface {
